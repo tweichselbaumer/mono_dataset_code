@@ -1,0 +1,21 @@
+{
+  "version": "0.2.1",
+  "defaults": {},
+  "configurations": [
+    {
+      "type": "default",
+      "project": "CMakeLists.txt",
+      "projectTarget": "vignetteCalib.exe (bin\\vignetteCalib.exe)",
+      "name": "vignetteCalib.exe (bin\\vignetteCalib.exe)",
+    },
+    {
+      "type": "default",
+      "project": "CMakeLists.txt",
+      "projectTarget": "playDataset.exe (C:\\Users\\thoma\\CMakeBuilds\\5ab8c796-e2e5-8a3b-b844-d13383964faf\\build\\x64-Debug\\bin\\playDataset.exe)",
+      "name": "playDataset.exe (C:\\Users\\thoma\\CMakeBuilds\\5ab8c796-e2e5-8a3b-b844-d13383964faf\\build\\x64-Debug\\bin\\playDataset.exe)",
+      "args": [
+        "E:\\Data\\sequence_01\\"
+      ]
+    }
+  ]
+}

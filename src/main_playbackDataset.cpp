@@ -35,7 +35,7 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <unistd.h>
+#include <io.h>
 
 
 #include<opencv2/core/core.hpp>

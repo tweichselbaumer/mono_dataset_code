@@ -35,9 +35,8 @@
 
 #include <sstream>
 #include <fstream>
-#include <dirent.h>
-#include <algorithm>
 
+#include <algorithm>
 #include "BenchmarkDatasetReader.h"
 
 

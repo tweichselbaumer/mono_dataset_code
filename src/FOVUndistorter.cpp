@@ -37,6 +37,8 @@
 #include <opencv2/calib3d/calib3d.hpp>
 #include <opencv2/opencv.hpp>
 #include <Eigen/Core>
+#include <locale.h>
+
 
 UndistorterFOV::UndistorterFOV()
 {
@@ -47,6 +49,8 @@ UndistorterFOV::UndistorterFOV()
 
 UndistorterFOV::UndistorterFOV(const char* configFileName)
 {
+
+	setlocale(LC_NUMERIC, "C");
 	remapX = nullptr;
 	remapY = nullptr;
 	valid=false;
