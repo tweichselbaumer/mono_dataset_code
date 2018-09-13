@@ -1,260 +1,38 @@
-///**
-//* This file is part of DSO.
-//* 
-//* Copyright 2016 Technical University of Munich and Intel.
-//* Developed by Jakob Engel <engelj at in dot tum dot de>,
-//* for more information see <http://vision.in.tum.de/dso>.
-//* If you use this code, please cite the respective publications as
-//* listed on the above website.
-//*
-//* DSO is free software: you can redistribute it and/or modify
-//* it under the terms of the GNU General Public License as published by
-//* the Free Software Foundation, either version 3 of the License, or
-//* (at your option) any later version.
-//*
-//* DSO is distributed in the hope that it will be useful,
-//* but WITHOUT ANY WARRANTY; without even the implied warranty of
-//* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-//* GNU General Public License for more details.
-//*
-//* You should have received a copy of the GNU General Public License
-//* along with DSO. If not, see <http://www.gnu.org/licenses/>.
-//*/
-//
-//
-//
-//
-//#include <sstream>
-//#include <fstream>
-//#include <iostream>
-//
-//#include <Eigen/Core>
-//#include <iterator>
-//#include "util/settings.h"
-//#include "util/globalFuncs.h"
-//#include "IOWrapper/ImageDisplay.h"
-//#include "IOWrapper/ImageRW.h"
-//#include "util/Undistort.h"
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//PhotometricUndistorter::PhotometricUndistorter(
-//		std::string file,
-//		std::string noiseImage,
-//		std::string vignetteImage,
-//		int w_, int h_)
-//{
-//	valid=false;
-//	vignetteMap=0;
-//	vignetteMapInv=0;
-//	w = w_;
-//	h = h_;
-//	output = new ImageAndExposure(w,h);
-//	if(file=="" || vignetteImage=="")
-//	{
-//		printf("NO PHOTOMETRIC Calibration!\n");
-//	}
-//
-//
-//	// read G.
-//	std::ifstream f(file.c_str());
-//	printf("Reading Photometric Calibration from file %s\n",file.c_str());
-//	if (!f.good())
-//	{
-//		printf("PhotometricUndistorter: Could not open file!\n");
-//		return;
-//	}
-//
-//
-//
-//	{
-//		std::string line;
-//		std::getline( f, line );
-//		std::istringstream l1i( line );
-//		std::vector<float> Gvec = std::vector<float>( std::istream_iterator<float>(l1i), std::istream_iterator<float>() );
-//
-//
-//
-//        GDepth = Gvec.size();
-//
-//        if(GDepth < 256)
-//        {
-//            printf("PhotometricUndistorter: invalid format! got %d entries in first line, expected at least 256!\n",(int)Gvec.size());
-//            return;
-//        }
-//
-//
-//        for(int i=0;i<GDepth;i++) G[i] = Gvec[i];
-//
-//        for(int i=0;i<GDepth-1;i++)
-//		{
-//			if(G[i+1] <= G[i])
-//			{
-//				printf("PhotometricUndistorter: G invalid! it has to be strictly increasing, but it isnt!\n");
-//				return;
-//			}
-//		}
-//
-//		float min=G[0];
-//        float max=G[GDepth-1];
-//        for(int i=0;i<GDepth;i++) G[i] = 255.0 * (G[i] - min) / (max-min);			// make it to 0..255 => 0..255.
-//	}
-//
-//	if(setting_photometricCalibration==0)
-//	{
-//        for(int i=0;i<GDepth;i++) G[i]=255.0f*i/(float)(GDepth-1);
-//	}
-//
-//
-//
-//	printf("Reading Vignette Image from %s\n",vignetteImage.c_str());
-//	MinimalImage<unsigned short>* vm16 = IOWrap::readImageBW_16U(vignetteImage.c_str());
-//	MinimalImageB* vm8 = IOWrap::readImageBW_8U(vignetteImage.c_str());
-//	vignetteMap = new float[w*h];
-//	vignetteMapInv = new float[w*h];
-//
-//	if(vm16 != 0)
-//	{
-//		if(vm16->w != w ||vm16->h != h)
-//		{
-//			printf("PhotometricUndistorter: Invalid vignette image size! got %d x %d, expected %d x %d\n",
-//					vm16->w, vm16->h, w, h);
-//			if(vm16!=0) delete vm16;
-//			if(vm8!=0) delete vm8;
-//			return;
-//		}
-//
-//		float maxV=0;
-//		for(int i=0;i<w*h;i++)
-//			if(vm16->at(i) > maxV) maxV = vm16->at(i);
-//
-//		for(int i=0;i<w*h;i++)
-//			vignetteMap[i] = vm16->at(i) / maxV;
-//	}
-//	else if(vm8 != 0)
-//	{
-//		if(vm8->w != w ||vm8->h != h)
-//		{
-//			printf("PhotometricUndistorter: Invalid vignette image size! got %d x %d, expected %d x %d\n",
-//					vm8->w, vm8->h, w, h);
-//			if(vm16!=0) delete vm16;
-//			if(vm8!=0) delete vm8;
-//			return;
-//		}
-//
-//		float maxV=0;
-//		for(int i=0;i<w*h;i++)
-//			if(vm8->at(i) > maxV) maxV = vm8->at(i);
-//
-//		for(int i=0;i<w*h;i++)
-//			vignetteMap[i] = vm8->at(i) / maxV;
-//	}
-//	else
-//	{
-//		printf("PhotometricUndistorter: Invalid vignette image\n");
-//		if(vm16!=0) delete vm16;
-//		if(vm8!=0) delete vm8;
-//		return;
-//	}
-//
-//	if(vm16!=0) delete vm16;
-//	if(vm8!=0) delete vm8;
-//
-//
-//	for(int i=0;i<w*h;i++)
-//		vignetteMapInv[i] = 1.0f / vignetteMap[i];
-//
-//
-//	printf("Successfully read photometric calibration!\n");
-//	valid = true;
-//}
-//PhotometricUndistorter::~PhotometricUndistorter()
-//{
-//	if(vignetteMap != 0) delete[] vignetteMap;
-//	if(vignetteMapInv != 0) delete[] vignetteMapInv;
-//	delete output;
-//}
-//
-//
-//void PhotometricUndistorter::unMapFloatImage(float* image)
-//{
-//	int wh=w*h;
-//	for(int i=0;i<wh;i++)
-//	{
-//		float BinvC;
-//		float color = image[i];
-//
-//		if(color < 1e-3)
-//			BinvC=0.0f;
-//        else if(color > GDepth-1.01f)
-//            BinvC=GDepth-1.1;
-//		else
-//		{
-//			int c = color;
-//			float a = color-c;
-//			BinvC=G[c]*(1-a) + G[c+1]*a;
-//		}
-//
-//		float val = BinvC;
-//		if(val < 0) val = 0;
-//		image[i] = val;
-//	}
-//}
-//
-//template<typename T>
-//void PhotometricUndistorter::processFrame(T* image_in, float exposure_time, float factor)
-//{
-//	int wh=w*h;
-//    float* data = output->image;
-//	assert(output->w == w && output->h == h);
-//	assert(data != 0);
-//
-//
-//	if(!valid || exposure_time <= 0 || setting_photometricCalibration==0) // disable full photometric calibration.
-//	{
-//		for(int i=0; i<wh;i++)
-//		{
-//			data[i] = factor*image_in[i];
-//		}
-//		output->exposure_time = exposure_time;
-//		output->timestamp = 0;
-//	}
-//	else
-//	{
-//		for(int i=0; i<wh;i++)
-//		{
-//			data[i] = G[image_in[i]];
-//		}
-//
-//		if(setting_photometricCalibration==2)
-//		{
-//			for(int i=0; i<wh;i++)
-//				data[i] *= vignetteMapInv[i];
-//		}
-//
-//		output->exposure_time = exposure_time;
-//		output->timestamp = 0;
-//	}
-//
-//
-//	if(!setting_useExposure)
-//		output->exposure_time = 1;
-//
-//}
-//template void PhotometricUndistorter::processFrame<unsigned char>(unsigned char* image_in, float exposure_time, float factor);
-//template void PhotometricUndistorter::processFrame<unsigned short>(unsigned short* image_in, float exposure_time, float factor);
-//
-//
-//
-//
-//
+/**
+* This file is part of DSO.
+* 
+* Copyright 2016 Technical University of Munich and Intel.
+* Developed by Jakob Engel <engelj at in dot tum dot de>,
+* for more information see <http://vision.in.tum.de/dso>.
+* If you use this code, please cite the respective publications as
+* listed on the above website.
+*
+* DSO is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* DSO is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with DSO. If not, see <http://www.gnu.org/licenses/>.
+*/
+
+
+
+
+#include <sstream>
+#include <fstream>
+#include <iostream>
+
+#include <Eigen/Core>
+#include <iterator>
+#include "util/Undistort.h"
+
+
 //Undistort::~Undistort()
 //{
 //	if(remapX != 0) delete[] remapX;
@@ -949,284 +727,284 @@
 //	std::cout << K << "\n\n";
 //
 //}
-//
-//
-//UndistortFOV::UndistortFOV(const char* configFileName, bool noprefix)
-//{
-//    printf("Creating FOV undistorter\n");
-//
-//    if(noprefix)
-//        readFromFile(configFileName, 5);
-//    else
-//        readFromFile(configFileName, 5, "FOV ");
-//}
-//UndistortFOV::~UndistortFOV()
-//{
-//}
-//
-//void UndistortFOV::distortCoordinates(float* in_x, float* in_y, float* out_x, float* out_y, int n) const
-//{
-//	float dist = parsOrg[4];
-//	float d2t = 2.0f * tan(dist / 2.0f);
-//
-//
-//
-//	// current camera parameters
-//    float fx = parsOrg[0];
-//    float fy = parsOrg[1];
-//    float cx = parsOrg[2];
-//    float cy = parsOrg[3];
-//
-//
-//
-//	float ofx = K(0,0);
-//	float ofy = K(1,1);
-//	float ocx = K(0,2);
-//	float ocy = K(1,2);
-//
-//	for(int i=0;i<n;i++)
-//	{
-//		float x = in_x[i];
-//		float y = in_y[i];
-//		float ix = (x - ocx) / ofx;
-//		float iy = (y - ocy) / ofy;
-//
-//		float r = sqrtf(ix*ix + iy*iy);
-//		float fac = (r==0 || dist==0) ? 1 : atanf(r * d2t)/(dist*r);
-//
-//		ix = fx*fac*ix+cx;
-//		iy = fy*fac*iy+cy;
-//
-//		out_x[i] = ix;
-//		out_y[i] = iy;
-//	}
-//}
-//
-//
-//
-//
-//
-//
-//UndistortRadTan::UndistortRadTan(const char* configFileName, bool noprefix)
-//{
-//    printf("Creating RadTan undistorter\n");
-//
-//    if(noprefix)
-//        readFromFile(configFileName, 8);
-//    else
-//        readFromFile(configFileName, 8,"RadTan ");
-//}
-//UndistortRadTan::~UndistortRadTan()
-//{
-//}
-//
-//void UndistortRadTan::distortCoordinates(float* in_x, float* in_y, float* out_x, float* out_y, int n) const
-//{
-//    // RADTAN
-//    float fx = parsOrg[0];
-//    float fy = parsOrg[1];
-//    float cx = parsOrg[2];
-//    float cy = parsOrg[3];
-//    float k1 = parsOrg[4];
-//    float k2 = parsOrg[5];
-//    float r1 = parsOrg[6];
-//    float r2 = parsOrg[7];
-//
-//    float ofx = K(0,0);
-//    float ofy = K(1,1);
-//    float ocx = K(0,2);
-//    float ocy = K(1,2);
-//
-//
-//
-//    for(int i=0;i<n;i++)
-//    {
-//        float x = in_x[i];
-//        float y = in_y[i];
-//
-//        // RADTAN
-//        float ix = (x - ocx) / ofx;
-//        float iy = (y - ocy) / ofy;
-//        float mx2_u = ix * ix;
-//        float my2_u = iy * iy;
-//        float mxy_u = ix * iy;
-//        float rho2_u = mx2_u+my2_u;
-//        float rad_dist_u = k1 * rho2_u + k2 * rho2_u * rho2_u;
-//        float x_dist = ix + ix * rad_dist_u + 2.0 * r1 * mxy_u + r2 * (rho2_u + 2.0 * mx2_u);
-//        float y_dist = iy + iy * rad_dist_u + 2.0 * r2 * mxy_u + r1 * (rho2_u + 2.0 * my2_u);
-//        float ox = fx*x_dist+cx;
-//        float oy = fy*y_dist+cy;
-//
-//
-//        out_x[i] = ox;
-//        out_y[i] = oy;
-//    }
-//
-//
-//}
-//
-//
-//
-//UndistortEquidistant::UndistortEquidistant(const char* configFileName, bool noprefix)
-//{
-//    printf("Creating Equidistant undistorter\n");
-//
-//    if(noprefix)
-//        readFromFile(configFileName, 8);
-//    else
-//        readFromFile(configFileName, 8,"EquiDistant ");
-//}
-//UndistortEquidistant::~UndistortEquidistant()
-//{
-//}
-//
-//void UndistortEquidistant::distortCoordinates(float* in_x, float* in_y, float* out_x, float* out_y, int n) const
-//{
-//    // EQUI
-//    float fx = parsOrg[0];
-//    float fy = parsOrg[1];
-//    float cx = parsOrg[2];
-//    float cy = parsOrg[3];
-//    float k1 = parsOrg[4];
-//    float k2 = parsOrg[5];
-//    float k3 = parsOrg[6];
-//    float k4 = parsOrg[7];
-//
-//
-//    float ofx = K(0,0);
-//    float ofy = K(1,1);
-//    float ocx = K(0,2);
-//    float ocy = K(1,2);
-//
-//
-//
-//    for(int i=0;i<n;i++)
-//    {
-//        float x = in_x[i];
-//        float y = in_y[i];
-//
-//        // EQUI
-//        float ix = (x - ocx) / ofx;
-//        float iy = (y - ocy) / ofy;
-//        float r = sqrt(ix * ix + iy * iy);
-//        float theta = atan(r);
-//        float theta2 = theta * theta;
-//        float theta4 = theta2 * theta2;
-//        float theta6 = theta4 * theta2;
-//        float theta8 = theta4 * theta4;
-//        float thetad = theta * (1 + k1 * theta2 + k2 * theta4 + k3 * theta6 + k4 * theta8);
-//        float scaling = (r > 1e-8) ? thetad / r : 1.0;
-//        float ox = fx*ix*scaling + cx;
-//        float oy = fy*iy*scaling + cy;
-//
-//        out_x[i] = ox;
-//        out_y[i] = oy;
-//    }
-//}
-//
-//
-//
-//UndistortKB::UndistortKB(const char* configFileName, bool noprefix)
-//{
-//	printf("Creating KannalaBrandt undistorter\n");
-//
-//    if(noprefix)
-//        readFromFile(configFileName, 8);
-//    else
-//        readFromFile(configFileName, 8,"KannalaBrandt ");
-//}
-//UndistortKB::~UndistortKB()
-//{
-//}
-//
-//void UndistortKB::distortCoordinates(float* in_x, float* in_y, float* out_x, float* out_y, int n) const
-//{
-//    const float fx = parsOrg[0];
-//	const float fy = parsOrg[1];
-//	const float cx = parsOrg[2];
-//	const float cy = parsOrg[3];
-//    const float k0 = parsOrg[4];
-//    const float k1 = parsOrg[5];
-//    const float k2 = parsOrg[6];
-//    const float k3 = parsOrg[7];
-//
-//    const float ofx = K(0,0);
-//    const float ofy = K(1,1);
-//    const float ocx = K(0,2);
-//    const float ocy = K(1,2);
-//
-//
-//	for(int i=0;i<n;i++)
-//	{
-//		float x = in_x[i];
-//		float y = in_y[i];
-//
-//		// RADTAN
-//		float ix = (x - ocx) / ofx;
-//		float iy = (y - ocy) / ofy;
-//
-//	    const float Xsq_plus_Ysq = ix*ix + iy*iy;
-//	    const float sqrt_Xsq_Ysq = sqrtf(Xsq_plus_Ysq);
-//	    const float theta = atan2f( sqrt_Xsq_Ysq, 1 );
-//	    const float theta2 = theta*theta;
-//	    const float theta3 = theta2*theta;
-//	    const float theta5 = theta3*theta2;
-//	    const float theta7 = theta5*theta2;
-//	    const float theta9 = theta7*theta2;
-//	    const float r = theta + k0*theta3 + k1*theta5 + k2*theta7 + k3*theta9;
-//
-//	    if(sqrt_Xsq_Ysq < 1e-6)
-//	    {
-//	    	out_x[i] = fx * ix + cx;
-//	    	out_y[i] = fy * iy + cy;
-//	    }
-//	    else
-//	    {
-//	    	out_x[i] = (r / sqrt_Xsq_Ysq) * fx * ix + cx;
-//	    	out_y[i] = (r / sqrt_Xsq_Ysq) * fy * iy + cy;
-//	    }
-//	}
-//}
-//
-//
-//
-//
-//
-//UndistortPinhole::UndistortPinhole(const char* configFileName, bool noprefix)
-//{
-//    if(noprefix)
-//        readFromFile(configFileName, 5);
-//    else
-//        readFromFile(configFileName, 5,"Pinhole ");
-//
-//}
-//UndistortPinhole::~UndistortPinhole()
-//{
-//}
-//
-//void UndistortPinhole::distortCoordinates(float* in_x, float* in_y, float* out_x, float* out_y, int n) const
-//{
-//	// current camera parameters
-//    float fx = parsOrg[0];
-//    float fy = parsOrg[1];
-//    float cx = parsOrg[2];
-//    float cy = parsOrg[3];
-//
-//	float ofx = K(0,0);
-//	float ofy = K(1,1);
-//	float ocx = K(0,2);
-//	float ocy = K(1,2);
-//
-//	for(int i=0;i<n;i++)
-//	{
-//		float x = in_x[i];
-//		float y = in_y[i];
-//		float ix = (x - ocx) / ofx;
-//		float iy = (y - ocy) / ofy;
-//		ix = fx*ix+cx;
-//		iy = fy*iy+cy;
-//		out_x[i] = ix;
-//		out_y[i] = iy;
-//	}
-//}
-//
+
+
+UndistortFOV::UndistortFOV(const char* configFileName, bool noprefix)
+{
+    printf("Creating FOV undistorter\n");
+
+    if(noprefix)
+        readFromFile(configFileName, 5);
+    else
+        readFromFile(configFileName, 5, "FOV ");
+}
+UndistortFOV::~UndistortFOV()
+{
+}
+
+void UndistortFOV::distortCoordinates(float* in_x, float* in_y, float* out_x, float* out_y, int n) const
+{
+	float dist = parsOrg[4];
+	float d2t = 2.0f * tan(dist / 2.0f);
+
+
+
+	// current camera parameters
+    float fx = parsOrg[0];
+    float fy = parsOrg[1];
+    float cx = parsOrg[2];
+    float cy = parsOrg[3];
+
+
+
+	float ofx = K(0,0);
+	float ofy = K(1,1);
+	float ocx = K(0,2);
+	float ocy = K(1,2);
+
+	for(int i=0;i<n;i++)
+	{
+		float x = in_x[i];
+		float y = in_y[i];
+		float ix = (x - ocx) / ofx;
+		float iy = (y - ocy) / ofy;
+
+		float r = sqrtf(ix*ix + iy*iy);
+		float fac = (r==0 || dist==0) ? 1 : atanf(r * d2t)/(dist*r);
+
+		ix = fx*fac*ix+cx;
+		iy = fy*fac*iy+cy;
+
+		out_x[i] = ix;
+		out_y[i] = iy;
+	}
+}
+
+
+
+
+
+
+UndistortRadTan::UndistortRadTan(const char* configFileName, bool noprefix)
+{
+    printf("Creating RadTan undistorter\n");
+
+    if(noprefix)
+        readFromFile(configFileName, 8);
+    else
+        readFromFile(configFileName, 8,"RadTan ");
+}
+UndistortRadTan::~UndistortRadTan()
+{
+}
+
+void UndistortRadTan::distortCoordinates(float* in_x, float* in_y, float* out_x, float* out_y, int n) const
+{
+    // RADTAN
+    float fx = parsOrg[0];
+    float fy = parsOrg[1];
+    float cx = parsOrg[2];
+    float cy = parsOrg[3];
+    float k1 = parsOrg[4];
+    float k2 = parsOrg[5];
+    float r1 = parsOrg[6];
+    float r2 = parsOrg[7];
+
+    float ofx = K(0,0);
+    float ofy = K(1,1);
+    float ocx = K(0,2);
+    float ocy = K(1,2);
+
+
+
+    for(int i=0;i<n;i++)
+    {
+        float x = in_x[i];
+        float y = in_y[i];
+
+        // RADTAN
+        float ix = (x - ocx) / ofx;
+        float iy = (y - ocy) / ofy;
+        float mx2_u = ix * ix;
+        float my2_u = iy * iy;
+        float mxy_u = ix * iy;
+        float rho2_u = mx2_u+my2_u;
+        float rad_dist_u = k1 * rho2_u + k2 * rho2_u * rho2_u;
+        float x_dist = ix + ix * rad_dist_u + 2.0 * r1 * mxy_u + r2 * (rho2_u + 2.0 * mx2_u);
+        float y_dist = iy + iy * rad_dist_u + 2.0 * r2 * mxy_u + r1 * (rho2_u + 2.0 * my2_u);
+        float ox = fx*x_dist+cx;
+        float oy = fy*y_dist+cy;
+
+
+        out_x[i] = ox;
+        out_y[i] = oy;
+    }
+
+
+}
+
+
+
+UndistortEquidistant::UndistortEquidistant(const char* configFileName, bool noprefix)
+{
+    printf("Creating Equidistant undistorter\n");
+
+    if(noprefix)
+        readFromFile(configFileName, 8);
+    else
+        readFromFile(configFileName, 8,"EquiDistant ");
+}
+UndistortEquidistant::~UndistortEquidistant()
+{
+}
+
+void UndistortEquidistant::distortCoordinates(float* in_x, float* in_y, float* out_x, float* out_y, int n) const
+{
+    // EQUI
+    float fx = parsOrg[0];
+    float fy = parsOrg[1];
+    float cx = parsOrg[2];
+    float cy = parsOrg[3];
+    float k1 = parsOrg[4];
+    float k2 = parsOrg[5];
+    float k3 = parsOrg[6];
+    float k4 = parsOrg[7];
+
+
+    float ofx = K(0,0);
+    float ofy = K(1,1);
+    float ocx = K(0,2);
+    float ocy = K(1,2);
+
+
+
+    for(int i=0;i<n;i++)
+    {
+        float x = in_x[i];
+        float y = in_y[i];
+
+        // EQUI
+        float ix = (x - ocx) / ofx;
+        float iy = (y - ocy) / ofy;
+        float r = sqrt(ix * ix + iy * iy);
+        float theta = atan(r);
+        float theta2 = theta * theta;
+        float theta4 = theta2 * theta2;
+        float theta6 = theta4 * theta2;
+        float theta8 = theta4 * theta4;
+        float thetad = theta * (1 + k1 * theta2 + k2 * theta4 + k3 * theta6 + k4 * theta8);
+        float scaling = (r > 1e-8) ? thetad / r : 1.0;
+        float ox = fx*ix*scaling + cx;
+        float oy = fy*iy*scaling + cy;
+
+        out_x[i] = ox;
+        out_y[i] = oy;
+    }
+}
+
+
+
+UndistortKB::UndistortKB(const char* configFileName, bool noprefix)
+{
+	printf("Creating KannalaBrandt undistorter\n");
+
+    if(noprefix)
+        readFromFile(configFileName, 8);
+    else
+        readFromFile(configFileName, 8,"KannalaBrandt ");
+}
+UndistortKB::~UndistortKB()
+{
+}
+
+void UndistortKB::distortCoordinates(float* in_x, float* in_y, float* out_x, float* out_y, int n) const
+{
+    const float fx = parsOrg[0];
+	const float fy = parsOrg[1];
+	const float cx = parsOrg[2];
+	const float cy = parsOrg[3];
+    const float k0 = parsOrg[4];
+    const float k1 = parsOrg[5];
+    const float k2 = parsOrg[6];
+    const float k3 = parsOrg[7];
+
+    const float ofx = K(0,0);
+    const float ofy = K(1,1);
+    const float ocx = K(0,2);
+    const float ocy = K(1,2);
+
+
+	for(int i=0;i<n;i++)
+	{
+		float x = in_x[i];
+		float y = in_y[i];
+
+		// RADTAN
+		float ix = (x - ocx) / ofx;
+		float iy = (y - ocy) / ofy;
+
+	    const float Xsq_plus_Ysq = ix*ix + iy*iy;
+	    const float sqrt_Xsq_Ysq = sqrtf(Xsq_plus_Ysq);
+	    const float theta = atan2f( sqrt_Xsq_Ysq, 1 );
+	    const float theta2 = theta*theta;
+	    const float theta3 = theta2*theta;
+	    const float theta5 = theta3*theta2;
+	    const float theta7 = theta5*theta2;
+	    const float theta9 = theta7*theta2;
+	    const float r = theta + k0*theta3 + k1*theta5 + k2*theta7 + k3*theta9;
+
+	    if(sqrt_Xsq_Ysq < 1e-6)
+	    {
+	    	out_x[i] = fx * ix + cx;
+	    	out_y[i] = fy * iy + cy;
+	    }
+	    else
+	    {
+	    	out_x[i] = (r / sqrt_Xsq_Ysq) * fx * ix + cx;
+	    	out_y[i] = (r / sqrt_Xsq_Ysq) * fy * iy + cy;
+	    }
+	}
+}
+
+
+
+
+
+UndistortPinhole::UndistortPinhole(const char* configFileName, bool noprefix)
+{
+    if(noprefix)
+        readFromFile(configFileName, 5);
+    else
+        readFromFile(configFileName, 5,"Pinhole ");
+
+}
+UndistortPinhole::~UndistortPinhole()
+{
+}
+
+void UndistortPinhole::distortCoordinates(float* in_x, float* in_y, float* out_x, float* out_y, int n) const
+{
+	// current camera parameters
+    float fx = parsOrg[0];
+    float fy = parsOrg[1];
+    float cx = parsOrg[2];
+    float cy = parsOrg[3];
+
+	float ofx = K(0,0);
+	float ofy = K(1,1);
+	float ocx = K(0,2);
+	float ocy = K(1,2);
+
+	for(int i=0;i<n;i++)
+	{
+		float x = in_x[i];
+		float y = in_y[i];
+		float ix = (x - ocx) / ofx;
+		float iy = (y - ocy) / ofy;
+		ix = fx*ix+cx;
+		iy = fy*iy+cy;
+		out_x[i] = ix;
+		out_y[i] = iy;
+	}
+}
+
