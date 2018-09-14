@@ -22,10 +22,10 @@ include_directories(
 )
 
 
-add_executable(responseCalib src/main_responseCalib.cpp src/FOVUndistorter.cpp src/PhotometricUndistorter.cpp)
+add_executable(responseCalib src/main_responseCalib.cpp src/EquiUndistorter.cpp src/PhotometricUndistorter.cpp)
 target_link_libraries(responseCalib ${OpenCV_LIBS})
 
-add_executable(playDataset src/main_playbackDataset.cpp src/FOVUndistorter.cpp src/PhotometricUndistorter.cpp)
+add_executable(playDataset src/main_playbackDataset.cpp src/EquiUndistorter.cpp src/PhotometricUndistorter.cpp)
 target_link_libraries(playDataset ${OpenCV_LIBS})
 
 find_package(Aruco)
@@ -36,7 +36,7 @@ IF(Aruco_FOUND)
 		${Boost_INCLUDE_DIRS}
 		${ARUCO_INCLUDE_DIRS}
 	)
-	add_executable(vignetteCalib src/main_vignetteCalib.cpp src/FOVUndistorter.cpp src/PhotometricUndistorter.cpp)
+	add_executable(vignetteCalib src/main_vignetteCalib.cpp src/EquiUndistorter.cpp src/PhotometricUndistorter.cpp)
 	target_link_libraries(vignetteCalib ${OpenCV_LIBS} ${ARUCO_LIBRARIES})
 ELSE()
 	message("================ aruco not found. not compiling vignetteCalib. ========================")
