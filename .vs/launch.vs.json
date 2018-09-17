@@ -14,14 +14,14 @@
       "projectTarget": "playDataset.exe (C:\\Users\\thoma\\CMakeBuilds\\5ab8c796-e2e5-8a3b-b844-d13383964faf\\build\\x64-Debug\\bin\\playDataset.exe)",
       "name": "playDataset.exe (C:\\Users\\thoma\\CMakeBuilds\\5ab8c796-e2e5-8a3b-b844-d13383964faf\\build\\x64-Debug\\bin\\playDataset.exe)",
       "args": [
-        "E:\\Data\\sequence_01\\"
+        "E:\\Data\\sweep1\\"
       ]
     },
     {
       "type": "default",
       "project": "CMakeLists.txt",
-      "projectTarget": "playDataset.exe (bin\\playDataset.exe)",
-      "name": "playDataset.exe (bin\\playDataset.exe)",
+      "projectTarget": "responseCalib.exe (C:\\Users\\thoma\\CMakeBuilds\\5ab8c796-e2e5-8a3b-b844-d13383964faf\\build\\x64-Debug\\bin\\responseCalib.exe)",
+      "name": "responseCalib.exe (C:\\Users\\thoma\\CMakeBuilds\\5ab8c796-e2e5-8a3b-b844-d13383964faf\\build\\x64-Debug\\bin\\responseCalib.exe)",
       "args": [
         "E:\\Data\\sweep1\\"
       ]
