@@ -43,7 +43,7 @@
 int leakPadding = 2;
 int nits = 10;
 int skipFrames = 1;
-
+bool noGui = false;
 
 
 Eigen::Vector2d rmse(double* G, double* E, std::vector<double> &exposureVec, std::vector<unsigned char*> &dataVec, int wh)
@@ -108,7 +108,8 @@ void plotE(double* E, int w, int h, std::string saveTo = "")
 	}
 
 	printf("Irradiance %f - %f\n", Emin, Emax);
-	cv::imshow("lnE", EImg);
+	if (!noGui)
+		cv::imshow("lnE", EImg);
 
 	if (saveTo != "")
 	{
@@ -140,7 +141,8 @@ void plotG(double* G, std::string saveTo = "")
 	}
 
 	printf("Inv. Response %f - %f\n", min, max);
-	cv::imshow("G", GImg);
+	if (!noGui)
+		cv::imshow("G", GImg);
 	//if(saveTo != "") cv::imwrite(saveTo, GImg*255);
 	cv::Mat GImgThresh;
 	cv::threshold(GImg, GImgThresh, 0.1, 255, cv::THRESH_BINARY);
@@ -168,6 +170,12 @@ void parseArgument(char* arg)
 	{
 		skipFrames = option;
 		printf("skipFrames set to %d!\n", skipFrames);
+		return;
+	}
+
+	if (strncmp(arg, "-noGUI", 6) == 0)
+	{
+		noGui = true;
 		return;
 	}
 
