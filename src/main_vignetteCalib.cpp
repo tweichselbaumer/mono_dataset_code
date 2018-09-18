@@ -111,7 +111,7 @@ void displayImageV(float* I, int w, int h, std::string name)
 }
 
 
-
+bool noGui = false;
 
 int imageSkip = 1;
 
@@ -177,6 +177,12 @@ void parseArgument(char* arg)
 		return;
 	}
 
+	if (strncmp(arg, "-noGUI", 6) == 0)
+	{
+		noGui = true;
+		return;
+	}
+
 	printf("could not parse argument \"%s\"!!\n", arg);
 }
 
@@ -189,7 +195,7 @@ int main(int argc, char** argv)
 	for (int i = 2; i < argc; i++)
 		parseArgument(argv[i]);
 
-	if (-1 == system("rmdir -rf vignetteCalibResult")) printf("could not delete old vignetteCalibResult folder!\n");
+	if (-1 == system("rmdir /s /q vignetteCalibResult")) printf("could not delete old vignetteCalibResult folder!\n");
 	if (-1 == system("mkdir vignetteCalibResult")) printf("could not delete old vignetteCalibResult folder!\n");
 
 	// affine map from plane cordinates to grid coordinates.
@@ -356,8 +362,8 @@ int main(int argc, char** argv)
 					plane2imgY[x + y * gw] = NAN;
 				}
 			}
-
-		cv::imshow("inRaw", dbgImg);
+		if (!noGui)
+			cv::imshow("inRaw", dbgImg);
 
 		if (rand() % 40 == 0)
 		{
@@ -446,7 +452,9 @@ int main(int argc, char** argv)
 			else
 				planeColor[pi] = planeColorFC[pi] / planeColorFF[pi];
 		}
-		displayImage(planeColor, gw, gh, "Plane");
+
+		if (!noGui)
+			displayImage(planeColor, gw, gh, "Plane");
 
 		printf("%f residual terms => %f\n", R, sqrtf(E / R));
 
@@ -567,7 +575,8 @@ int main(int argc, char** argv)
 			}
 
 			{
-				displayImageV(vignetteFactorTT, wI, hI, "VignetteSmoothed");
+				if (!noGui)
+					displayImageV(vignetteFactorTT, wI, hI, "VignetteSmoothed");
 				cv::Mat wrap = cv::Mat(hI, wI, CV_32F, vignetteFactorTT)*254.9*254.9;
 				cv::Mat wrap16;
 				wrap.convertTo(wrap16, CV_16U, 1, 0);
@@ -575,7 +584,8 @@ int main(int argc, char** argv)
 				cv::waitKey(50);
 			}
 			{
-				displayImageV(vignetteFactor, wI, hI, "VignetteOrg");
+				if (!noGui)
+					displayImageV(vignetteFactor, wI, hI, "VignetteOrg");
 				cv::Mat wrap = cv::Mat(hI, wI, CV_32F, vignetteFactor)*254.9*254.9;
 				cv::Mat wrap16;
 				wrap.convertTo(wrap16, CV_16U, 1, 0);
