@@ -112,7 +112,7 @@ void displayImageV(float* I, int w, int h, std::string name)
 
 
 bool noGui = false;
-
+bool showPercent = false;
 int imageSkip = 1;
 
 
@@ -183,6 +183,12 @@ void parseArgument(char* arg)
 		return;
 	}
 
+	if (strncmp(arg, "-showPercent", 12) == 0)
+	{
+		showPercent = true;
+		return;
+	}
+
 	printf("could not parse argument \"%s\"!!\n", arg);
 }
 
@@ -192,6 +198,7 @@ void parseArgument(char* arg)
 
 int main(int argc, char** argv)
 {
+	setbuf(stdout, NULL);
 	for (int i = 2; i < argc; i++)
 		parseArgument(argv[i]);
 
@@ -233,9 +240,12 @@ int main(int argc, char** argv)
 
 	if (meanExposure == 0) meanExposure = 1;
 
-
-	for (int i = 0; i < reader->getNumImages(); i += imageSkip)
+	int numOfImages = reader->getNumImages();
+	for (int i = 0; i < numOfImages; i += imageSkip)
 	{
+		if (showPercent && i % (numOfImages / 20) == 0)
+			std::cout << "percent: " << 0.33 *i / numOfImages << std::endl;
+
 		std::vector<aruco::Marker> Markers;
 		ExposureImage* img = reader->getImage(i, true, false, false, false);
 
@@ -401,6 +411,9 @@ int main(int argc, char** argv)
 	double R = 0;
 	for (int it = 0; it < maxIterations; it++)
 	{
+		if (showPercent)
+			std::cout << "percent: " << 0.33 + 0.66* it / maxIterations << std::endl;
+
 		int oth2 = outlierTh * outlierTh;
 		if (it < maxIterations / 2) oth2 = 10000 * 10000;
 
@@ -595,7 +608,8 @@ int main(int argc, char** argv)
 		}
 	}
 
-
+	if (showPercent)
+		std::cout << "percent: " << 1.0 << std::endl;
 
 	logFile.flush();
 	logFile.close();

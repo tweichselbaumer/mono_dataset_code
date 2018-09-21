@@ -5,76 +5,11 @@
     {
       "type": "default",
       "project": "CMakeLists.txt",
-      "projectTarget": "vignetteCalib.exe (bin\\vignetteCalib.exe)",
-      "name": "vignetteCalib.exe (bin\\vignetteCalib.exe)",
+      "projectTarget": "vignetteCalib.exe (C:\\Users\\thoma\\source\\repos\\mono_dataset_code\\bin\\vignetteCalib.exe)",
+      "name": "vignetteCalib.exe (C:\\Users\\thoma\\source\\repos\\mono_dataset_code\\bin\\vignetteCalib.exe)",
       "args": [
-        "E:\\Data\\vignette1\\",
-        "-noGUI"
-      ]
-    },
-    {
-      "type": "default",
-      "project": "CMakeLists.txt",
-      "projectTarget": "playDataset.exe (C:\\Users\\thoma\\CMakeBuilds\\5ab8c796-e2e5-8a3b-b844-d13383964faf\\build\\x64-Debug\\bin\\playDataset.exe)",
-      "name": "playDataset.exe (C:\\Users\\thoma\\CMakeBuilds\\5ab8c796-e2e5-8a3b-b844-d13383964faf\\build\\x64-Debug\\bin\\playDataset.exe)",
-      "args": [
-        "E:\\Data\\sweep1\\"
-      ]
-    },
-    {
-      "type": "default",
-      "project": "CMakeLists.txt",
-      "projectTarget": "responseCalib.exe (C:\\Users\\thoma\\CMakeBuilds\\5ab8c796-e2e5-8a3b-b844-d13383964faf\\build\\x64-Debug\\bin\\responseCalib.exe)",
-      "name": "responseCalib.exe (C:\\Users\\thoma\\CMakeBuilds\\5ab8c796-e2e5-8a3b-b844-d13383964faf\\build\\x64-Debug\\bin\\responseCalib.exe)",
-      "args": [
-        "E:\\Data\\sweep1\\"
-      ]
-    },
-    {
-      "type": "default",
-      "project": "CMakeLists.txt",
-      "projectTarget": "vignetteCalib.exe (C:\\Users\\thoma\\CMakeBuilds\\5ab8c796-e2e5-8a3b-b844-d13383964faf\\build\\x64-Release\\bin\\vignetteCalib.exe)",
-      "name": "vignetteCalib.exe (C:\\Users\\thoma\\CMakeBuilds\\5ab8c796-e2e5-8a3b-b844-d13383964faf\\build\\x64-Release\\bin\\vignetteCalib.exe)",
-      "args": [
-        "E:\\Data\\vignette2\\"
-      ]
-    },
-    {
-      "type": "default",
-      "project": "CMakeLists.txt",
-      "projectTarget": "responseCalib.exe (C:\\Users\\thoma\\CMakeBuilds\\5ab8c796-e2e5-8a3b-b844-d13383964faf\\build\\x64-Release\\bin\\responseCalib.exe)",
-      "name": "responseCalib.exe (C:\\Users\\thoma\\CMakeBuilds\\5ab8c796-e2e5-8a3b-b844-d13383964faf\\build\\x64-Release\\bin\\responseCalib.exe)",
-      "args": [
-        "E:\\Data\\sweep1\\",
-        "-noGUI"
-      ]
-    },
-    {
-      "type": "default",
-      "project": "CMakeLists.txt",
-      "projectTarget": "vignetteCalib.exe (C:\\Users\\thoma\\CMakeBuilds\\5ab8c796-e2e5-8a3b-b844-d13383964faf\\build\\x64-Debug\\bin\\vignetteCalib.exe)",
-      "name": "vignetteCalib.exe (C:\\Users\\thoma\\CMakeBuilds\\5ab8c796-e2e5-8a3b-b844-d13383964faf\\build\\x64-Debug\\bin\\vignetteCalib.exe)",
-      "args": [
-        "E:\\Data\\vignette1\\",
-        "-noGUI"
-      ]
-    },
-    {
-      "type": "default",
-      "project": "CMakeLists.txt",
-      "projectTarget": "playDataset.exe (C:\\Users\\thoma\\CMakeBuilds\\5ab8c796-e2e5-8a3b-b844-d13383964faf\\build\\x64-Release\\bin\\playDataset.exe)",
-      "name": "playDataset.exe (C:\\Users\\thoma\\CMakeBuilds\\5ab8c796-e2e5-8a3b-b844-d13383964faf\\build\\x64-Release\\bin\\playDataset.exe)",
-      "args": [
-        "E:\\Data\\vignette2\\"
-      ]
-    },
-    {
-      "type": "default",
-      "project": "CMakeLists.txt",
-      "projectTarget": "responseCalib.exe (bin\\responseCalib.exe)",
-      "name": "responseCalib.exe (bin\\responseCalib.exe)",
-      "args": [
-        "E:\\Data\\sweep1\\"
+        "E:\\Data\\vignette2",
+        "-showPercent"
       ]
     }
   ]

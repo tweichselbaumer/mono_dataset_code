@@ -44,7 +44,7 @@ int leakPadding = 2;
 int nits = 10;
 int skipFrames = 1;
 bool noGui = false;
-
+bool showPercent = false;
 
 Eigen::Vector2d rmse(double* G, double* E, std::vector<double> &exposureVec, std::vector<unsigned char*> &dataVec, int wh)
 {
@@ -179,6 +179,12 @@ void parseArgument(char* arg)
 		return;
 	}
 
+	if (strncmp(arg, "-showPercent", 12) == 0)
+	{
+		showPercent = true;
+		return;
+	}
+
 	printf("could not parse argument \"%s\"!!\n", arg);
 }
 
@@ -186,6 +192,7 @@ void parseArgument(char* arg)
 
 int main(int argc, char** argv)
 {
+	setbuf(stdout, NULL);
 	// parse arguments
 	for (int i = 2; i < argc; i++)
 		parseArgument(argv[i]);
@@ -199,7 +206,8 @@ int main(int argc, char** argv)
 	DatasetReader* reader = new DatasetReader(argv[1]);
 	std::vector<double> exposureVec;
 	std::vector<unsigned char*> dataVec;
-	for (int i = 0; i < reader->getNumImages(); i += skipFrames)
+	int numOfImages = reader->getNumImages();
+	for (int i = 0; i < numOfImages; i += skipFrames)
 	{
 		cv::Mat img = reader->getImageRaw_internal(i);
 		if (img.rows == 0 || img.cols == 0) continue;
@@ -215,7 +223,8 @@ int main(int argc, char** argv)
 		};
 		w = img.cols;
 		h = img.rows;
-
+		if (showPercent && i % (numOfImages / 20) == 0)
+			std::cout << "percent: " << 0.33 *i / numOfImages << std::endl;
 
 		unsigned char* data = new unsigned char[img.rows*img.cols];
 		memcpy(data, img.data, img.rows*img.cols);
@@ -294,6 +303,8 @@ int main(int argc, char** argv)
 
 	for (int it = 0; it < nits; it++)
 	{
+		if (showPercent)
+			std::cout << "percent: " << 0.33 + 0.66* it / nits << std::endl;
 		if (optG)
 		{
 			// optimize log inverse response function.
@@ -378,11 +389,14 @@ int main(int argc, char** argv)
 	logFile.flush();
 	logFile.close();
 
+	if (showPercent)
+		std::cout << "percent: " << 1.0 << std::endl;
+
 	std::ofstream lg;
 	lg.open("photoCalibResult/pcalib.txt", std::ios::trunc | std::ios::out);
 	lg.precision(15);
 	for (int i = 0; i < 256; i++)
-		lg << G[i] << " ";
+		lg <<  G[i] << " ";
 	lg << "\n";
 
 	lg.flush();
