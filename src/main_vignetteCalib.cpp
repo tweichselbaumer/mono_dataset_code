@@ -243,149 +243,225 @@ int main(int argc, char** argv)
 	int numOfImages = reader->getNumImages();
 	for (int i = 0; i < numOfImages; i += imageSkip)
 	{
-		if (showPercent && i % (numOfImages / 20) == 0)
-			std::cout << "percent: " << 0.33 *i / numOfImages << std::endl;
+		if (i == 366) {
+			if (showPercent && i % (numOfImages / 20) == 0)
+				std::cout << "percent: " << 0.33 *i / numOfImages << std::endl;
 
-		std::vector<aruco::Marker> Markers;
-		ExposureImage* img = reader->getImage(i, true, false, false, false);
+			std::vector<aruco::Marker> Markers;
+			ExposureImage* img = reader->getImage(i, true, false, false, false);
 
-		cv::Mat InImage;
-		cv::Mat(h_out, w_out, CV_32F, img->image).convertTo(InImage, CV_8U, 1, 0);
-		delete img;
+			cv::Mat InImage;
+			cv::Mat(h_out, w_out, CV_32F, img->image).convertTo(InImage, CV_8U, 1, 0);
+			delete img;
 
-		MDetector.detect(InImage, Markers);
-		if (Markers.size() != 1) continue;
+			MDetector.detect(InImage, Markers);
+			if (Markers.size() != 1) continue;
 
-		std::vector<cv::Point2f> ptsP;
-		std::vector<cv::Point2f> ptsI;
-		ptsI.push_back(cv::Point2f(Markers[0][0].x, Markers[0][0].y));
-		ptsI.push_back(cv::Point2f(Markers[0][1].x, Markers[0][1].y));
-		ptsI.push_back(cv::Point2f(Markers[0][2].x, Markers[0][2].y));
-		ptsI.push_back(cv::Point2f(Markers[0][3].x, Markers[0][3].y));
-		ptsP.push_back(cv::Point2f(-0.5, 0.5));
-		ptsP.push_back(cv::Point2f(0.5, 0.5));
-		ptsP.push_back(cv::Point2f(0.5, -0.5));
-		ptsP.push_back(cv::Point2f(-0.5, -0.5));
+			std::vector<cv::Point2f> ptsP;
+			std::vector<cv::Point2f> ptsI;
+			ptsI.push_back(cv::Point2f(Markers[0][0].x, Markers[0][0].y));
+			ptsI.push_back(cv::Point2f(Markers[0][1].x, Markers[0][1].y));
+			ptsI.push_back(cv::Point2f(Markers[0][2].x, Markers[0][2].y));
+			ptsI.push_back(cv::Point2f(Markers[0][3].x, Markers[0][3].y));
+			ptsP.push_back(cv::Point2f(-0.5, 0.5));
+			ptsP.push_back(cv::Point2f(0.5, 0.5));
+			ptsP.push_back(cv::Point2f(0.5, -0.5));
+			ptsP.push_back(cv::Point2f(-0.5, -0.5));
 
-		cv::Mat Hcv = cv::findHomography(ptsP, ptsI);
-		Eigen::Matrix3f H;
-		H(0, 0) = Hcv.at<double>(0, 0);
-		H(0, 1) = Hcv.at<double>(0, 1);
-		H(0, 2) = Hcv.at<double>(0, 2);
-		H(1, 0) = Hcv.at<double>(1, 0);
-		H(1, 1) = Hcv.at<double>(1, 1);
-		H(1, 2) = Hcv.at<double>(1, 2);
-		H(2, 0) = Hcv.at<double>(2, 0);
-		H(2, 1) = Hcv.at<double>(2, 1);
-		H(2, 2) = Hcv.at<double>(2, 2);
+			cv::Mat Hcv = cv::findHomography(ptsP, ptsI);
+			Eigen::Matrix3f H;
+			H(0, 0) = Hcv.at<double>(0, 0);
+			H(0, 1) = Hcv.at<double>(0, 1);
+			H(0, 2) = Hcv.at<double>(0, 2);
+			H(1, 0) = Hcv.at<double>(1, 0);
+			H(1, 1) = Hcv.at<double>(1, 1);
+			H(1, 2) = Hcv.at<double>(1, 2);
+			H(2, 0) = Hcv.at<double>(2, 0);
+			H(2, 1) = Hcv.at<double>(2, 1);
+			H(2, 2) = Hcv.at<double>(2, 2);
 
-		ExposureImage* imgRaw = reader->getImage(i, false, true, false, false);
-
-
-		float* plane2imgX = new float[gw*gh];
-		float* plane2imgY = new float[gw*gh];
-
-		Eigen::Matrix3f HK = H * K_p2idx_inverse;
+			ExposureImage* imgRaw = reader->getImage(i, false, true, false, false);
 
 
-		int idx = 0;
-		for (int y = 0; y < gh; y++)
-			for (int x = 0; x < gw; x++)
-			{
-				Eigen::Vector3f pp = HK * Eigen::Vector3f(x, y, 1);
-				plane2imgX[idx] = pp[0] / pp[2];
-				plane2imgY[idx] = pp[1] / pp[2];
-				idx++;
-			}
+			float* plane2imgX = new float[gw*gh];
+			float* plane2imgY = new float[gw*gh];
 
-		reader->getUndistorter()->distortCoordinates(plane2imgX, plane2imgY, gw*gh);
+			Eigen::Matrix3f HK = H * K_p2idx_inverse;
 
-		if (imgRaw->exposure_time == 0) imgRaw->exposure_time = 1;
+			int idx = 0;
 
-		float* image = new float[wI*hI];
-		for (int y = 0; y < hI; y++)
-			for (int x = 0; x < wI; x++)
-				image[x + y * wI] = meanExposure * imgRaw->image[x + y * wI] / imgRaw->exposure_time;
-
-		for (int y = 2; y < hI - 2; y++)
-			for (int x = 2; x < wI - 2; x++)
-			{
-				for (int deltax = -2; deltax < 3; deltax++)
-					for (int deltay = -2; deltay < 3; deltay++)
-					{
-						if (fabsf(image[x + y * wI] - image[x + deltax + (y + deltay)*wI]) > maxAbsGrad) { image[x + y * wI] = NAN; image[x + deltax + (y + deltay)*wI] = NAN; }
-					}
-			}
-
-		images.push_back(image);
-
-
-		// debug-plot.
-		cv::Mat dbgImg(imgRaw->h, imgRaw->w, CV_8UC3);
-		for (int i = 0; i < imgRaw->w*imgRaw->h; i++)
-			dbgImg.at<cv::Vec3b>(i) = cv::Vec3b(imgRaw->image[i], imgRaw->image[i], imgRaw->image[i]);
-
-		for (int x = 0; x <= gw; x += 200)
-			for (int y = 0; y <= gh; y += 10)
-			{
-				int idxS = (x < gw ? x : gw - 1) + (y < gh ? y : gh - 1)*gw;
-				int idxT = (x < gw ? x : gw - 1) + ((y + 10) < gh ? (y + 10) : gh - 1)*gw;
-
-				int u_dS = plane2imgX[idxS] + 0.5;
-				int v_dS = plane2imgY[idxS] + 0.5;
-
-				int u_dT = plane2imgX[idxT] + 0.5;
-				int v_dT = plane2imgY[idxT] + 0.5;
-
-				if (u_dS >= 0 && v_dS >= 0 && u_dS < wI && v_dS < hI && u_dT >= 0 && v_dT >= 0 && u_dT < wI && v_dT < hI)
-					cv::line(dbgImg, cv::Point(u_dS, v_dS), cv::Point(u_dT, v_dT), cv::Scalar(0, 0, 255), 10, CV_AA);
-			}
-
-
-		for (int x = 0; x <= gw; x += 10)
-			for (int y = 0; y <= gh; y += 200)
-			{
-				int idxS = (x < gw ? x : gw - 1) + (y < gh ? y : gh - 1)*gw;
-				int idxT = ((x + 10) < gw ? (x + 10) : gw - 1) + (y < gh ? y : gh - 1)*gw;
-
-				int u_dS = plane2imgX[idxS] + 0.5;
-				int v_dS = plane2imgY[idxS] + 0.5;
-
-				int u_dT = plane2imgX[idxT] + 0.5;
-				int v_dT = plane2imgY[idxT] + 0.5;
-
-				if (u_dS >= 0 && v_dS >= 0 && u_dS < wI && v_dS < hI && u_dT >= 0 && v_dT >= 0 && u_dT < wI && v_dT < hI)
-					cv::line(dbgImg, cv::Point(u_dS, v_dS), cv::Point(u_dT, v_dT), cv::Scalar(0, 0, 255), 10, CV_AA);
-			}
-
-
-
-		for (int x = 0; x < gw; x++)
 			for (int y = 0; y < gh; y++)
 			{
-				int u_d = plane2imgX[x + y * gw] + 0.5;
-				int v_d = plane2imgY[x + y * gw] + 0.5;
+				Eigen::Vector3f ppy0 = HK * Eigen::Vector3f(0, y, 1);
+				ppy0[0] = ppy0[0] / ppy0[2];
+				ppy0[1] = ppy0[1] / ppy0[2];
 
-				if (!(u_d > 1 && v_d > 1 && u_d < wI - 2 && v_d < hI - 2))
+				Eigen::Vector3f ppy1 = HK * Eigen::Vector3f(1, y, 1);
+				ppy1[0] = ppy1[0] / ppy1[2];
+				ppy1[1] = ppy1[1] / ppy1[2];
+
+				Eigen::Vector3f gx = ppy1 - ppy0;
+				Eigen::Vector2f a(gx[0], gx[1]);
+
+				for (int x = 0; x < gw; x++)
 				{
-					plane2imgX[x + y * gw] = NAN;
-					plane2imgY[x + y * gw] = NAN;
+					Eigen::Vector3f pp = HK * Eigen::Vector3f(x, y, 1);
+					plane2imgX[idx] = pp[0] / pp[2];
+					plane2imgY[idx] = pp[1] / pp[2];
+
+
+					Eigen::Vector2f b(plane2imgX[idx], plane2imgY[idx]);
+
+					b = b - Eigen::Vector2f(ppy0[0], ppy0[1]);
+
+					double cosval = a.dot(b) / (a.norm() * b.norm());
+					double alpha;
+
+					if (cosval > 1)
+						alpha = 0;
+					else if (cosval < -1)
+						alpha = 3.14;
+					else
+						alpha = acos(cosval);
+
+					if (b.norm() == 0)
+					{
+						if (x == 0 && y == 0)
+						{
+							alpha = 0;
+						}
+						else {
+							Eigen::Vector3f ppy00 = HK * Eigen::Vector3f(0, 0, 1);
+							ppy00[0] = ppy00[0] / ppy00[2];
+							ppy00[1] = ppy00[1] / ppy00[2];
+
+							Eigen::Vector3f ppy10 = HK * Eigen::Vector3f(1, 0, 1);
+							ppy10[0] = ppy10[0] / ppy10[2];
+							ppy10[1] = ppy10[1] / ppy10[2];
+
+							Eigen::Vector3f gx0 = ppy10 - ppy00;
+							Eigen::Vector2f a0(gx[0], gx[1]);
+
+							Eigen::Vector2f b0(plane2imgX[idx], plane2imgY[idx]);
+
+							b0 = b0 - Eigen::Vector2f(ppy00[0], ppy00[1]);
+
+							double cosval0 = a0.dot(b0) / (a0.norm() * b0.norm());
+
+							if (cosval0 > 1)
+								alpha = 0;
+							else if (cosval0 < -1)
+								alpha = 3.14;
+							else
+								alpha = acos(cosval0);
+						}
+
+					}
+
+					if (alpha > 1 * 3.14 / 180 || alpha < -1 * 3.14 / 180)
+					{
+						plane2imgX[idx] = NAN;
+						plane2imgY[idx] = NAN;
+					}
+					else if (plane2imgY[idx] < 0)
+					{
+						printf("%f, %f, %d, %d\n", alpha, cosval, x, y);
+					}
+
+					idx++;
 				}
 			}
-		if (!noGui)
-			cv::imshow("inRaw", dbgImg);
 
-		if (rand() % 40 == 0)
-		{
+			reader->getUndistorter()->distortCoordinates(plane2imgX, plane2imgY, gw*gh);
+
+			if (imgRaw->exposure_time == 0) imgRaw->exposure_time = 1;
+
+			float* image = new float[wI*hI];
+			for (int y = 0; y < hI; y++)
+				for (int x = 0; x < wI; x++)
+					image[x + y * wI] = meanExposure * imgRaw->image[x + y * wI] / imgRaw->exposure_time;
+
+			for (int y = 2; y < hI - 2; y++)
+				for (int x = 2; x < wI - 2; x++)
+				{
+					for (int deltax = -2; deltax < 3; deltax++)
+						for (int deltay = -2; deltay < 3; deltay++)
+						{
+							if (fabsf(image[x + y * wI] - image[x + deltax + (y + deltay)*wI]) > maxAbsGrad) { image[x + y * wI] = NAN; image[x + deltax + (y + deltay)*wI] = NAN; }
+						}
+				}
+
+			images.push_back(image);
+
+
+			// debug-plot.
+			cv::Mat dbgImg(imgRaw->h, imgRaw->w, CV_8UC3);
+			for (int i = 0; i < imgRaw->w*imgRaw->h; i++)
+				dbgImg.at<cv::Vec3b>(i) = cv::Vec3b(imgRaw->image[i], imgRaw->image[i], imgRaw->image[i]);
+
+			for (int x = 0; x <= gw; x += 200)
+				for (int y = 0; y <= gh; y += 10)
+				{
+					int idxS = (x < gw ? x : gw - 1) + (y < gh ? y : gh - 1)*gw;
+					int idxT = (x < gw ? x : gw - 1) + ((y + 10) < gh ? (y + 10) : gh - 1)*gw;
+
+					int u_dS = plane2imgX[idxS] + 0.5;
+					int v_dS = plane2imgY[idxS] + 0.5;
+
+					int u_dT = plane2imgX[idxT] + 0.5;
+					int v_dT = plane2imgY[idxT] + 0.5;
+
+					if (u_dS >= 0 && v_dS >= 0 && u_dS < wI && v_dS < hI && u_dT >= 0 && v_dT >= 0 && u_dT < wI && v_dT < hI)
+						cv::line(dbgImg, cv::Point(u_dS, v_dS), cv::Point(u_dT, v_dT), cv::Scalar(0, 0, 255), 10, CV_AA);
+				}
+
+
+			for (int x = 0; x <= gw; x += 10)
+				for (int y = 0; y <= gh; y += 200)
+				{
+					int idxS = (x < gw ? x : gw - 1) + (y < gh ? y : gh - 1)*gw;
+					int idxT = ((x + 10) < gw ? (x + 10) : gw - 1) + (y < gh ? y : gh - 1)*gw;
+
+					int u_dS = plane2imgX[idxS] + 0.5;
+					int v_dS = plane2imgY[idxS] + 0.5;
+
+					int u_dT = plane2imgX[idxT] + 0.5;
+					int v_dT = plane2imgY[idxT] + 0.5;
+
+					if (u_dS >= 0 && v_dS >= 0 && u_dS < wI && v_dS < hI && u_dT >= 0 && v_dT >= 0 && u_dT < wI && v_dT < hI)
+						cv::line(dbgImg, cv::Point(u_dS, v_dS), cv::Point(u_dT, v_dT), cv::Scalar(0, 0, 255), 10, CV_AA);
+				}
+
+
+
+			for (int x = 0; x < gw; x++)
+				for (int y = 0; y < gh; y++)
+				{
+					int u_d = plane2imgX[x + y * gw] + 0.5;
+					int v_d = plane2imgY[x + y * gw] + 0.5;
+
+					if (!(u_d > 1 && v_d > 1 && u_d < wI - 2 && v_d < hI - 2))
+					{
+						plane2imgX[x + y * gw] = NAN;
+						plane2imgY[x + y * gw] = NAN;
+					}
+				}
+			if (!noGui)
+				cv::imshow("inRaw", dbgImg);
+
+
+			/*if (rand() % 40 == 0)
+			{*/
 			char buf[1000];
 			snprintf(buf, 1000, "vignetteCalibResult/img%d.png", i);
 			cv::imwrite(buf, dbgImg);
+			//}
+
+			cv::waitKey(1);
+
+			p2imgX.push_back(plane2imgX);
+			p2imgY.push_back(plane2imgY);
 		}
-
-		cv::waitKey(1);
-
-		p2imgX.push_back(plane2imgX);
-		p2imgY.push_back(plane2imgY);
 	}
 
 

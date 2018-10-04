@@ -14,7 +14,7 @@ find_package(Eigen3 REQUIRED)
 find_package(OpenCV REQUIRED)
 
 set(CMAKE_CXX_FLAGS
-   "${CMAKE_CXX_FLAGS_RELEASE} ${SSE_FLAGS} -std=c++0x /fp:fast /openmp /Ox"
+   "${CMAKE_CXX_FLAGS_RELEASE} ${SSE_FLAGS} -std=c++0x /openmp /Ox"
 )
 
 include_directories(

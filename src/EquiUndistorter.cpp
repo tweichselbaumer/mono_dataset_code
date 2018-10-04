@@ -201,7 +201,7 @@ void UndistorterEqui::distortCoordinates(float* in_x, float* in_y, int n)
 		float ix = (x - ocx) / ofx;
 		float iy = (y - ocy) / ofy;
 
-		float r = sqrtf(ix*ix + iy * iy);
+		float r = sqrtf(ix * ix + iy * iy);
 
 		float theta = atan(r);
 		float theta2 = theta * theta;
@@ -209,7 +209,7 @@ void UndistorterEqui::distortCoordinates(float* in_x, float* in_y, int n)
 		float theta6 = theta4 * theta2;
 		float theta8 = theta4 * theta4;
 		float thetad = theta * (1 + k1 * theta2 + k2 * theta4 + k3 * theta6 + k4 * theta8);
-		float scaling = (r > 1e-8) ? thetad / r : 1.0;
+		float scaling = (r > 1e-15) ? thetad / r : 1.0;
 
 		float ox = fx * ix*scaling + cx;
 		float oy = fy * iy*scaling + cy;

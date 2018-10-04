@@ -8,8 +8,7 @@
       "projectTarget": "vignetteCalib.exe (C:\\Users\\thoma\\source\\repos\\mono_dataset_code\\bin\\vignetteCalib.exe)",
       "name": "vignetteCalib.exe (C:\\Users\\thoma\\source\\repos\\mono_dataset_code\\bin\\vignetteCalib.exe)",
       "args": [
-        "E:\\Data\\vignette2",
-        "-showPercent"
+        "C:\\Users\\thoma\\AppData\\Local\\Temp\\firefly\\8ff6b5ab-4441-426e-ab37-bb3c1f2acb7f\\"
       ]
     }
   ]
