@@ -219,13 +219,6 @@ bool checkIfValid(Eigen::Vector2f pp0, Eigen::Vector2f ppg, Eigen::Vector2f pp)
 		return false;
 	}
 
-	if (pp[1] < 0) {
-		printf("a: %f, cosv: %f\n", alpha, cosval);
-		std::cout << pp0 << std::endl;
-		std::cout << ppg << std::endl;
-		std::cout << pp << std::endl;
-	}
-
 	return true;
 }
 
@@ -328,7 +321,7 @@ int main(int argc, char** argv)
 	int numOfImages = reader->getNumImages();
 	for (int i = 0; i < numOfImages; i += imageSkip)
 	{
-		if (i == 531) {
+		if (true) {
 			if (showPercent && i % (numOfImages / 20) == 0)
 				std::cout << "percent: " << 0.33 *i / numOfImages << std::endl;
 
