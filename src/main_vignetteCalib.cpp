@@ -46,6 +46,7 @@
 #include "dirent.h"
 #include <algorithm>
 #include <math.h>
+#include "main_vignetteCalib.h"
 
 
  // reads interpolated element from a uchar* array
@@ -192,6 +193,90 @@ void parseArgument(char* arg)
 	printf("could not parse argument \"%s\"!!\n", arg);
 }
 
+bool checkIfValid(Eigen::Vector2f pp0, Eigen::Vector2f ppg, Eigen::Vector2f pp)
+{
+	Eigen::Vector2f b(0, 0);
+
+	b = pp - pp0;
+
+	double cosval = ppg.dot(b) / (ppg.norm() * b.norm());
+	double alpha;
+
+	if (cosval > 1)
+		alpha = 0;
+	else if (cosval < -1)
+		alpha = 3.14;
+	else
+		alpha = acos(cosval);
+
+	if (b.norm() == 0)
+	{
+		alpha = 0;
+	}
+
+	if (alpha > 1 * 3.14 / 180 || alpha < -1 * 3.14 / 180)
+	{
+		return false;
+	}
+
+	if (pp[1] < 0) {
+		printf("a: %f, cosv: %f\n", alpha, cosval);
+		std::cout << pp0 << std::endl;
+		std::cout << ppg << std::endl;
+		std::cout << pp << std::endl;
+	}
+
+	return true;
+}
+
+void makePlane2Img(Eigen::Matrix3f &HK, float * plane2imgX, float * plane2imgY, int startX, int nX, int startY, int nY)
+{
+	int endY = startY + nY;
+	int endX = startX + nX;
+
+	Eigen::Vector3f ppx0 = HK * Eigen::Vector3f(startX, startY, 1);
+	ppx0[0] = ppx0[0] / ppx0[2];
+	ppx0[1] = ppx0[1] / ppx0[2];
+
+	Eigen::Vector3f ppx1 = HK * Eigen::Vector3f(startX, startY + (startY < endY ? 1 : -1), 1);
+	ppx1[0] = ppx1[0] / ppx1[2];
+	ppx1[1] = ppx1[1] / ppx1[2];
+
+	Eigen::Vector3f gy = ppx1 - ppx0;
+
+	for (int y = startY; startY < endY ? y < endY : y > endY; startY < endY ? y++ : y--)
+	{
+		Eigen::Vector3f ppy0 = HK * Eigen::Vector3f(startX, y, 1);
+		ppy0[0] = ppy0[0] / ppy0[2];
+		ppy0[1] = ppy0[1] / ppy0[2];
+
+		Eigen::Vector3f ppy1 = HK * Eigen::Vector3f(startX + (startX < endX ? 1 : -1), y, 1);
+		ppy1[0] = ppy1[0] / ppy1[2];
+		ppy1[1] = ppy1[1] / ppy1[2];
+
+		Eigen::Vector3f gx = ppy1 - ppy0;
+		Eigen::Vector2f a(gx[0], gx[1]);
+
+		if (!checkIfValid(Eigen::Vector2f(ppx0[0], ppx0[1]), Eigen::Vector2f(gy[0], gy[1]), Eigen::Vector2f(ppy0[0], ppy0[1])))
+		{
+			continue;
+		}
+
+		for (int x = startX; startX < endX ? x < endX : x > endX; startX < endX ? x++ : x--)
+		{
+			int idx = y * gh + x;
+			Eigen::Vector3f pp = HK * Eigen::Vector3f(x, y, 1);
+			plane2imgX[idx] = pp[0] / pp[2];
+			plane2imgY[idx] = pp[1] / pp[2];
+
+			if (!checkIfValid(Eigen::Vector2f(ppy0[0], ppy0[1]), Eigen::Vector2f(gx[0], gx[1]), Eigen::Vector2f(plane2imgX[idx], plane2imgY[idx])))
+			{
+				plane2imgX[idx] = NAN;
+				plane2imgY[idx] = NAN;
+			}
+		}
+	}
+}
 
 
 
@@ -243,7 +328,7 @@ int main(int argc, char** argv)
 	int numOfImages = reader->getNumImages();
 	for (int i = 0; i < numOfImages; i += imageSkip)
 	{
-		if (i == 366) {
+		if (i == 531) {
 			if (showPercent && i % (numOfImages / 20) == 0)
 				std::cout << "percent: " << 0.33 *i / numOfImages << std::endl;
 
@@ -288,89 +373,10 @@ int main(int argc, char** argv)
 
 			Eigen::Matrix3f HK = H * K_p2idx_inverse;
 
-			int idx = 0;
-
-			for (int y = 0; y < gh; y++)
-			{
-				Eigen::Vector3f ppy0 = HK * Eigen::Vector3f(0, y, 1);
-				ppy0[0] = ppy0[0] / ppy0[2];
-				ppy0[1] = ppy0[1] / ppy0[2];
-
-				Eigen::Vector3f ppy1 = HK * Eigen::Vector3f(1, y, 1);
-				ppy1[0] = ppy1[0] / ppy1[2];
-				ppy1[1] = ppy1[1] / ppy1[2];
-
-				Eigen::Vector3f gx = ppy1 - ppy0;
-				Eigen::Vector2f a(gx[0], gx[1]);
-
-				for (int x = 0; x < gw; x++)
-				{
-					Eigen::Vector3f pp = HK * Eigen::Vector3f(x, y, 1);
-					plane2imgX[idx] = pp[0] / pp[2];
-					plane2imgY[idx] = pp[1] / pp[2];
-
-
-					Eigen::Vector2f b(plane2imgX[idx], plane2imgY[idx]);
-
-					b = b - Eigen::Vector2f(ppy0[0], ppy0[1]);
-
-					double cosval = a.dot(b) / (a.norm() * b.norm());
-					double alpha;
-
-					if (cosval > 1)
-						alpha = 0;
-					else if (cosval < -1)
-						alpha = 3.14;
-					else
-						alpha = acos(cosval);
-
-					if (b.norm() == 0)
-					{
-						if (x == 0 && y == 0)
-						{
-							alpha = 0;
-						}
-						else {
-							Eigen::Vector3f ppy00 = HK * Eigen::Vector3f(0, 0, 1);
-							ppy00[0] = ppy00[0] / ppy00[2];
-							ppy00[1] = ppy00[1] / ppy00[2];
-
-							Eigen::Vector3f ppy10 = HK * Eigen::Vector3f(1, 0, 1);
-							ppy10[0] = ppy10[0] / ppy10[2];
-							ppy10[1] = ppy10[1] / ppy10[2];
-
-							Eigen::Vector3f gx0 = ppy10 - ppy00;
-							Eigen::Vector2f a0(gx[0], gx[1]);
-
-							Eigen::Vector2f b0(plane2imgX[idx], plane2imgY[idx]);
-
-							b0 = b0 - Eigen::Vector2f(ppy00[0], ppy00[1]);
-
-							double cosval0 = a0.dot(b0) / (a0.norm() * b0.norm());
-
-							if (cosval0 > 1)
-								alpha = 0;
-							else if (cosval0 < -1)
-								alpha = 3.14;
-							else
-								alpha = acos(cosval0);
-						}
-
-					}
-
-					if (alpha > 1 * 3.14 / 180 || alpha < -1 * 3.14 / 180)
-					{
-						plane2imgX[idx] = NAN;
-						plane2imgY[idx] = NAN;
-					}
-					else if (plane2imgY[idx] < 0)
-					{
-						printf("%f, %f, %d, %d\n", alpha, cosval, x, y);
-					}
-
-					idx++;
-				}
-			}
+			makePlane2Img(HK, plane2imgX, plane2imgY, gw / 2 - 1, -gw / 2, gh / 2 - 1, -gh / 2);
+			makePlane2Img(HK, plane2imgX, plane2imgY, gw / 2 - 1, -gw / 2, gh / 2, gh / 2);
+			makePlane2Img(HK, plane2imgX, plane2imgY, gw / 2, gw / 2, gh / 2 - 1, -gh / 2);
+			makePlane2Img(HK, plane2imgX, plane2imgY, gw / 2, gw / 2, gh / 2, gh / 2);
 
 			reader->getUndistorter()->distortCoordinates(plane2imgX, plane2imgY, gw*gh);
 
