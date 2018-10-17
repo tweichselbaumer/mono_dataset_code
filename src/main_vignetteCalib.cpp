@@ -235,7 +235,8 @@ void makePlane2Img(Eigen::Matrix3f &HK, float * plane2imgX, float * plane2imgY, 
 	ppx1[0] = ppx1[0] / ppx1[2];
 	ppx1[1] = ppx1[1] / ppx1[2];
 
-	Eigen::Vector3f gy = ppx1 - ppx0;
+	Eigen::Vector3f gy(0, 0, 0);
+	gy = ppx1 - ppx0;
 
 	for (int y = startY; startY < endY ? y < endY : y > endY; startY < endY ? y++ : y--)
 	{
@@ -248,24 +249,34 @@ void makePlane2Img(Eigen::Matrix3f &HK, float * plane2imgX, float * plane2imgY, 
 		ppy1[1] = ppy1[1] / ppy1[2];
 
 		Eigen::Vector3f gx = ppy1 - ppy0;
-		Eigen::Vector2f a(gx[0], gx[1]);
+
+
 
 		if (!checkIfValid(Eigen::Vector2f(ppx0[0], ppx0[1]), Eigen::Vector2f(gy[0], gy[1]), Eigen::Vector2f(ppy0[0], ppy0[1])))
 		{
-			continue;
-		}
-
-		for (int x = startX; startX < endX ? x < endX : x > endX; startX < endX ? x++ : x--)
-		{
-			int idx = y * gh + x;
-			Eigen::Vector3f pp = HK * Eigen::Vector3f(x, y, 1);
-			plane2imgX[idx] = pp[0] / pp[2];
-			plane2imgY[idx] = pp[1] / pp[2];
-
-			if (!checkIfValid(Eigen::Vector2f(ppy0[0], ppy0[1]), Eigen::Vector2f(gx[0], gx[1]), Eigen::Vector2f(plane2imgX[idx], plane2imgY[idx])))
+			for (int x = startX; startX < endX ? x < endX : x > endX; startX < endX ? x++ : x--)
 			{
+				int idx = y * gh + x;
+
 				plane2imgX[idx] = NAN;
 				plane2imgY[idx] = NAN;
+
+			}
+		}
+		else
+		{
+			for (int x = startX; startX < endX ? x < endX : x > endX; startX < endX ? x++ : x--)
+			{
+				int idx = y * gh + x;
+				Eigen::Vector3f pp = HK * Eigen::Vector3f(x, y, 1);
+				plane2imgX[idx] = pp[0] / pp[2];
+				plane2imgY[idx] = pp[1] / pp[2];
+
+				if (!checkIfValid(Eigen::Vector2f(ppy0[0], ppy0[1]), Eigen::Vector2f(gx[0], gx[1]), Eigen::Vector2f(plane2imgX[idx], plane2imgY[idx])))
+				{
+					plane2imgX[idx] = NAN;
+					plane2imgY[idx] = NAN;
+				}
 			}
 		}
 	}
@@ -359,7 +370,6 @@ int main(int argc, char** argv)
 			H(2, 2) = Hcv.at<double>(2, 2);
 
 			ExposureImage* imgRaw = reader->getImage(i, false, true, false, false);
-
 
 			float* plane2imgX = new float[gw*gh];
 			float* plane2imgY = new float[gw*gh];
